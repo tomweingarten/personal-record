@@ -1,0 +1,15 @@
+# Hevy webhook + Apple Health nutrition push receiver. Put HTTPS in front of it (reverse proxy or tunnel).
+[Unit]
+Description=Personal Record webhook receiver
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=youruser
+WorkingDirectory=/path/to/personal-record
+ExecStart=/usr/bin/python3 training/hevy_hook.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,9 @@
+# Example crontab. Replace /path/to/personal-record. Logs go to your data directory.
+# Nightly: Hevy sync, then write next loads into Hevy routines.
+0 2 * * *  cd /path/to/personal-record && flock -w 900 data/logs/hevy-chain.lock sh -c 'python3 training/sync_hevy.py >> data/training/sync.log 2>&1 && python3 training/push_targets.py >> data/training/push_targets.log 2>&1'
+# Nightly: postcard, body measurements, then rebuild the dashboard.
+20 2 * * * cd /path/to/personal-record && { python3 training/postcard.py; python3 sync_scale.py; python3 sync_tape.py; python3 training/build_dashboard.py; } >> data/logs/nightly.log 2>&1
+# Hourly: heart rate and cardio detection (use the Python that has `requests`).
+7 * * * *  cd /path/to/personal-record && flock -n data/logs/cardio.lock python3 training/sync_cardio.py --days 3 >> data/logs/sync_cardio.log 2>&1
+# Nightly: alert if the Apple Health nutrition push stopped (needs [alerts] ntfy_url).
+30 21 * * * cd /path/to/personal-record && python3 training/nutrition_hook.py --check >> data/logs/nutrition_hook.log 2>&1

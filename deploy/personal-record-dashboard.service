@@ -1,0 +1,15 @@
+# Serves the dashboard and rebuilds it when data changes. Binds to [dashboard] host/port.
+[Unit]
+Description=Personal Record dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=youruser
+WorkingDirectory=/path/to/personal-record
+ExecStart=/usr/bin/python3 serve_dashboard.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

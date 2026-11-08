@@ -1,0 +1,48 @@
+# Copy to settings.toml (gitignored) and fill in. Everything here is optional
+# except what the integrations you use need.
+
+# Where your data lives (workout CSVs, body measurements, the built dashboard,
+# API keys in .env). Defaults to ./data. $PR_DATA_DIR overrides this.
+# data_dir = "~/personal-record-data"
+
+[body]
+target_weight_lb = 170.0     # centre of the target band on the weight chart
+height_in = 70.0             # for the US Navy body-fat estimate from tape measurements
+
+[nutrition]
+protein_floor_g = 150.0
+maintenance_kcal = 2400.0
+
+[dashboard]
+# colophon = "my press"      # optional signature in the dashboard footer and postcards
+host = "127.0.0.1"           # or a private address such as your Tailscale IP. Never 0.0.0.0.
+port = 8002
+# strength_export = "/path/to/strength.json"   # optional JSON snapshot of the strength index for other apps
+
+[hevy]
+webhook_port = 8790          # hevy_hook.py
+commit_snapshots = false     # git-commit routine snapshots if the data dir is a git repo
+
+[scale]                      # sync_scale.py: a Home Assistant weight sensor (.ha.env holds HA_URL, HA_TOKEN)
+weight_entity = "sensor.my_weight"
+plausible_lb = [80.0, 400.0] # readings outside this are ignored (pets, bags)
+# latest_json = "/path/to/weight.json"   # optional: latest weigh-in for other apps (e.g. an Apple Health Shortcut)
+
+[tape]                       # sync_tape.py / tape_watch.py: the renpho_tape Home Assistant integration
+session_entity = "sensor.renpho_tape_last_session"
+
+[cardio]                     # see sources/__init__.py
+# hr_source = "google_health"
+# recovery_source = "google_health"
+# python = "/path/to/venv/bin/python"   # if the source needs packages your system Python lacks
+
+[google_health]
+# token_file = "~/personal-record-data/google_health_tokens.json"   # default: <data dir>/google_health_tokens.json
+# env_file = "/path/to/.env"   # default: <data dir>/.env (GOOGLE_HEALTH_CLIENT_ID, GOOGLE_HEALTH_CLIENT_SECRET)
+# redirect_uri = "http://localhost:8080"
+
+[postcard]
+# chrome = "/path/to/chrome-headless-shell"   # optional: renders the weekly postcard
+
+[alerts]
+# ntfy_url = "https://ntfy.sh/your-topic"     # optional: nutrition_hook.py --check alerts here

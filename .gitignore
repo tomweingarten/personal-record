@@ -1,0 +1,11 @@
+# Personal: never commit
+settings.toml
+data/
+.env
+.env.*
+*.env
+*_tokens.json
+
+__pycache__/
+*.pyc
+demo-data/
