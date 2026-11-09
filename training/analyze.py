@@ -169,6 +169,21 @@ if _complete:
             extra = f"   (knee flexion {kf:.1f}/wk — hinges make up the rest)"
         print(f"  {flag} {part:12} {avg:5.1f} / {fl.sets:2d}  {'#' * int(round(avg))}{extra}")
 
+# --- trailing 7 days vs floor ---
+# Calendar weeks hide a block that was skipped four days ago. The 19:00 plan
+# check-in reads this section for its optional calf top-up (Tom, 2026-11-09):
+# calves sit last on the push day and are what a busy machine costs.
+_today = datetime.now().astimezone().date()
+_since = _today - timedelta(days=6)
+_recent7: dict[str, float] = defaultdict(float)
+for s in enriched_sets:
+    if _since <= s["dt"].astimezone().date() <= _today:
+        _recent7[classify(s["title"])] += s["set_credit"]
+print(f"\n=== LAST 7 DAYS ({_since} to {_today}): DIRECT SETS vs FLOOR ===")
+for part, fl in sorted(metrics.PART_FLOORS.items(), key=lambda kv: kv[0]):
+    n = _recent7.get(part, 0)
+    print(f"  {'OK ' if n >= fl.sets else 'LOW'} {part:12} {n:5.1f} / {fl.sets:2d}")
+
 # --- cardio ---
 print(f"\n=== CARDIO: last 12 weeks ===")
 cardio_workouts_by_week: dict[str, int] = defaultdict(int)

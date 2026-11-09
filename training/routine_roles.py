@@ -37,6 +37,11 @@ WRIST_EXTENSION_DB = "d9282e9e-3779-4e2f-b070-2ef5db5f9d94"
 
 OVERHEAD_TRICEPS_GENESIS = "22a02d04-e2ca-4900-af05-e98c96c5b071"
 
+# Myo-rep lifts on the push day (roles added 2026-11-09, see ROUTINE_ROLES).
+LEG_EXTENSION = "75A4F6C4"
+PEC_DECK = "9DCE2D64"
+CALF_EXTENSION = "47B9DF13"
+
 ROUTINE_ROLES = {
     "Push It v2 (2026-07)": {
         # 12-16 since 2026-10-08 (was 8-12 strict). 8-12 graduated 26 -> 34 as soon
@@ -67,6 +72,21 @@ ROUTINE_ROLES = {
             "floor": 7,
             "cue": "10-15 reps, RIR 2 -> 1 -> 0.",
         },
+        # Myo-rep lifts (2026-11-09). The Hevy notes and programming.md both say
+        # the activation set is 12-15 and the load moves at the top of that
+        # range, but with no role these fell to the title default (8-12 pec deck,
+        # 6-12 the other two) and graduated at 12 -- the BOTTOM of the written
+        # range. Pec deck went 95 -> 110 in four weeks and then logged 6-9; calf
+        # at 180 and leg extension at 120 sat at 8-11, with mini-sets of 1-3.
+        # The 2026-09-18 myo-rep change only kept the mini-sets (dropset rows)
+        # out of the gate; it never set the range. "reps" is the activation set.
+        # Default floor (11): two sessions running under it step the load down.
+        **{tid: {
+            "label": "MYO",
+            "reps": (12, 15),
+            "strict": False,
+            "cue": "MYO - load moves when set 1 hits 15.",
+        } for tid in (LEG_EXTENSION, PEC_DECK, CALF_EXTENSION)},
     },
     "Don't Push It v2 (2026-07)": {
         LATERAL_RAISE_GENESIS: {
