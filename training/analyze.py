@@ -169,20 +169,64 @@ if _complete:
             extra = f"   (knee flexion {kf:.1f}/wk — hinges make up the rest)"
         print(f"  {flag} {part:12} {avg:5.1f} / {fl.sets:2d}  {'#' * int(round(avg))}{extra}")
 
-# --- trailing 7 days vs floor ---
-# Calendar weeks hide a block that was skipped four days ago. The 19:00 plan
-# check-in reads this section for its optional calf top-up (Tom, 2026-11-09):
-# calves sit last on the push day and are what a busy machine costs.
+# --- rolling windows vs floor ---
+# Calendar weeks hide a block that was skipped four days ago, and one 7-day
+# window can't tell a one-off from a pattern. The 19:00 plan check-in reads
+# these two sections for its volume watch (Tom, 2026-11-09): 7 d is what the
+# schedule can still fix, 14 d and 28 d say whether the schedule is the problem.
 _today = datetime.now().astimezone().date()
-_since = _today - timedelta(days=6)
-_recent7: dict[str, float] = defaultdict(float)
+_floors = sorted(metrics.PART_FLOORS.items(), key=lambda kv: kv[0])
+
+
+def _local(s):
+    return s["dt"].astimezone().date()
+
+
+def _window(days):
+    out: dict[str, float] = defaultdict(float)
+    for s in enriched_sets:
+        if 0 <= (_today - _local(s)).days < days:
+            out[classify(s["title"])] += s["set_credit"]
+    return out
+
+
+_w7, _w14, _w28 = _window(7), _window(14), _window(28)
+_last_hit: dict[str, int] = {}
 for s in enriched_sets:
-    if _since <= s["dt"].astimezone().date() <= _today:
-        _recent7[classify(s["title"])] += s["set_credit"]
-print(f"\n=== LAST 7 DAYS ({_since} to {_today}): DIRECT SETS vs FLOOR ===")
-for part, fl in sorted(metrics.PART_FLOORS.items(), key=lambda kv: kv[0]):
-    n = _recent7.get(part, 0)
-    print(f"  {'OK ' if n >= fl.sets else 'LOW'} {part:12} {n:5.1f} / {fl.sets:2d}")
+    part, age = classify(s["title"]), (_today - _local(s)).days
+    if age >= 0:
+        _last_hit[part] = min(age, _last_hit.get(part, 10 ** 6))
+print(f"\n=== ROLLING VOLUME vs FLOOR (direct sets; today = {_today}) ===")
+print(f"  {'':16} {'last 7d':>8} {'14d /wk':>8} {'28d /wk':>8} {'floor':>6}  last trained")
+for part, fl in _floors:
+    a, b, c = _w7.get(part, 0), _w14.get(part, 0) / 2, _w28.get(part, 0) / 4
+    ago = _last_hit.get(part)
+    ago = "never" if ago is None else "today" if ago == 0 else f"{ago} d ago"
+    print(f"  {'OK ' if a >= fl.sets else 'LOW'} {part:12} {a:8.1f} {b:8.1f} {c:8.1f} "
+          f"{fl.sets:6d}  {ago}")
+
+# What one session of each routine delivers, so a reader can project the next
+# 7 days: sets already inside the window + what the planned sessions will add.
+# "usual" is the median of the last 4 sessions (blocks skipped for a busy
+# machine pull it down); "full" is the best of the last 6.
+_sessions: dict[str, dict[str, dict[str, float]]] = defaultdict(
+    lambda: defaultdict(lambda: defaultdict(float)))
+for s in enriched_sets:
+    if (_today - _local(s)).days < 60:
+        _sessions[s["workout_title"]][s["dt"].isoformat()][classify(s["title"])] += s["set_credit"]
+print(f"\n=== TYPICAL DIRECT SETS PER SESSION (usual = median of last 4, full = best of last 6) ===")
+for title, by_day in sorted(_sessions.items()):
+    days = sorted(by_day)
+    if len(days) < 3:
+        continue
+    cells = []
+    for part, _fl in _floors:
+        last4 = sorted(by_day[d].get(part, 0) for d in days[-4:])
+        usual = (last4[(len(last4) - 1) // 2] + last4[len(last4) // 2]) / 2
+        full = max(by_day[d].get(part, 0) for d in days[-6:])
+        if full:
+            cells.append(f"{part} {usual:g}" + (f" ({full:g})" if full != usual else ""))
+    print(f"  {title} [{len(days)} sessions in 60 d]: " + ", ".join(cells))
 
 # --- cardio ---
 print(f"\n=== CARDIO: last 12 weeks ===")
